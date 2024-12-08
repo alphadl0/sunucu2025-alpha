@@ -1,53 +1,59 @@
-const dbConn=require("../db/mysql_connect")
-const bcrypt=require("bcrypt")
-const APIError=require("../middleware/errorHandler")
-const Response=require("../utils/response")
-const kullanici_ekle=async (req,res)=>{
-    const kullanici_adi=req.body.kullanici_adi
-    const sifre=await  bcrypt.hash(req.body.sifre,10)
-    const eposta=req.body.eposta
-    const adi=req.body.adi
-    const soyadi=req.body.soyadi
-    const tel_no=req.body.tel_no
-    const cinsiyet=req.body.cinsiyet
-    const dogum_tarihi=req.body.dogum_tarihi
-    const yas=req.body.yas
-    dbConn.query("SELECT * FROM kullanicilar WHERE eposta=?",eposta,(error,results)=>{
-    if(error){
-        throw new APIError("Bir hata ile karşılaştık",401)
-    }else{
-        if(results>0){
-            return new Response(data,"Kayıt Başarılı").created(res)
-        }else{
-            dbConn.query("INSERT INTO kullanicilar (kullanici_adi,sifre,eposta,adi,soyadi,tel_no,cinsiyet,dogum_tarihi,yas) VALUES (?,?,?,?,?,?,?,?,?)",[kullanici_adi,sifre,eposta,adi,soyadi,tel_no,cinsiyet,dogum_tarihi,yas],(error,results)=>{
-                return res.json({
-                    success:true,
-                    data:null,
-                    message:"Kayıt Başarıyla Oluşturuldu"
-                })
-            })
+const dbConn = require("../db/mysql_connect")
+const bcrypt = require("bcrypt")
+const APIError = require("../middleware/errorHandler")
+const Response = require("../utils/response")
+
+const add_user = async (req, res) => {
+    const username = req.body.kullanici_adi
+    const password = await bcrypt.hash(req.body.sifre, 10)
+    const email = req.body.eposta
+    const first_name = req.body.adi
+    const last_name = req.body.soyadi
+    const phone_number = req.body.tel_no
+    const gender = req.body.cinsiyet
+    const birth_date = req.body.dogum_tarihi
+    const age = req.body.yas
+
+    dbConn.query("SELECT * FROM users WHERE email=?", email, (error, results) => {
+        if (error) {
+            throw new APIError("We encountered an error", 401)
+        } else {
+            if (results > 0) {
+                return new Response(data, "Registration Successful").created(res)
+            } else {
+                dbConn.query(
+                    "INSERT INTO users (username, password, email, first_name, last_name, phone_number, gender, birth_date, age) VALUES (?,?,?,?,?,?,?,?,?)",
+                    [username, password, email, first_name, last_name, phone_number, gender, birth_date, age],
+                    (error, results) => {
+                        return res.json({
+                            success: true,
+                            data: null,
+                            message: "Registration Successfully Created"
+                        })
+                    }
+                )
+            }
         }
-    }            
-       
-    })
-}
-const login=async(req,res)=>{
-    const kullanici_adi=req.body.kullanici_adi
-    const sifre=req.body.sifre
-    dbConn.query("SELECT * FROM kullanicilar WHERE kullanici_adi=? AND sifre=?",[kullanici_adi,sifre],(error,results)=>{
-        if(results>0){
-            return res.json({
-                success:true,
-                message:"Giriş Başarılı bir şekilde gerçekleşti"
-            })
-        }else{
-            return res.json({
-                success:false,
-                message:"Giriş Başarısız"
-            })
-        }
-        
     })
 }
 
-module.exports={kullanici_ekle}
+const login = async (req, res) => {
+    const username = req.body.kullanici_adi
+    const password = req.body.sifre
+
+    dbConn.query("SELECT * FROM users WHERE username=? AND password=?", [username, password], (error, results) => {
+        if (results > 0) {
+            return res.json({
+                success: true,
+                message: "Login was successful"
+            })
+        } else {
+            return res.json({
+                success: false,
+                message: "Login failed"
+            })
+        }
+    })
+}
+
+module.exports = { add_user }
